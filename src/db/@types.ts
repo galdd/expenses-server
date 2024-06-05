@@ -9,6 +9,7 @@ export interface UserRequest extends Request {
   user?: {
     sub: string;
   };
+  userId?: string;
 }
 
 export interface AuthRequest extends Request {

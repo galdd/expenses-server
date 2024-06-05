@@ -10,6 +10,7 @@ import {
   expenseIdSchema,
   updateExpensesSchema,
 } from "./expenses.routes-schema";
+import { getIO } from "../../socket";
 
 export const router = Router();
 
@@ -38,12 +39,29 @@ router.post(
     });
     await newExpense.populate("creator", "name photo");
 
-    if (listId) {
+    const list = await ExpensesListModel.findById(listId);
+
+    if (listId && list) {
       await ExpensesListModel.findByIdAndUpdate(
         listId,
         { $push: { expenses: newExpense._id } },
         { new: true }
       );
+
+      const io = getIO();
+      io.emit("notification", {
+        type: "expense",
+        props: {
+          id: newExpense._id.toString(),
+          avatarSrc: newExpense.creator.photo,
+          creatorName: newExpense.creator.name,
+          expenseDescription: newExpense.name,
+          listName: list.name,
+          price: newExpense.price,
+          timestamp: new Date().toISOString(),
+          action: "add",
+        },
+      });
     }
 
     res.status(status.CREATED).json(newExpense);
@@ -89,6 +107,23 @@ router.put(
       return res.sendStatus(status.NOT_FOUND);
     }
 
+    const list = await ExpensesListModel.findById(req.body.listId);
+
+    const io = getIO();
+    io.emit("notification", {
+      type: "expense",
+      props: {
+        id: updatedExpense._id.toString(),
+        avatarSrc: updatedExpense.creator.photo,
+        creatorName: updatedExpense.creator.name,
+        expenseDescription: updatedExpense.name,
+        listName: list ? list.name : req.body.listId,
+        price: updatedExpense.price,
+        timestamp: new Date().toISOString(),
+        action: "update",
+      },
+    });
+
     res.status(status.OK).json(updatedExpense);
   }
 );
@@ -106,19 +141,38 @@ router.delete(
         .json({ message: "User not authenticated" });
     }
 
-    const deletedExpense = await ExpensesModel.findByIdAndDelete(req.params.id);
+    const deletedExpense = await ExpensesModel.findByIdAndDelete(
+      req.params.id
+    ).populate("creator", "name photo");
 
     if (!deletedExpense) {
       return res.sendStatus(status.NOT_FOUND);
     }
 
-    if (listId) {
+    const list = await ExpensesListModel.findById(listId as string);
+
+    if (listId && list) {
       await ExpensesListModel.findByIdAndUpdate(
         listId as string,
         { $pull: { expenses: req.params.id } },
         { new: true }
       );
     }
+
+    const io = getIO();
+    io.emit("notification", {
+      type: "expense",
+      props: {
+        id: deletedExpense._id.toString(),
+        avatarSrc: deletedExpense.creator.photo,
+        creatorName: deletedExpense.creator.name,
+        expenseDescription: deletedExpense.name,
+        listName: list ? list.name : (listId as string),
+        price: deletedExpense.price,
+        timestamp: new Date().toISOString(),
+        action: "remove",
+      },
+    });
 
     res.status(status.OK).json(deletedExpense);
   }

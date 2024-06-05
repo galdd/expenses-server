@@ -1,6 +1,5 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
 import status from "http-status";
-import { UserRequest } from "../../db/@types";
 import { validateResource } from "../../routes/middlewares";
 import type { Expense } from "../expenses/expenses.model";
 import { UserModel } from "../users/users.model";
@@ -10,13 +9,15 @@ import {
   queryParamsValidator,
 } from "./expenses-list.routes-schema";
 import { ExpensesListModel } from "./expenses-list.model";
+import { getIO } from "../../socket";
+import { AuthRequest } from "../../db/@types";
 
 export const router = Router();
 
 router.get(
   "/",
   validateResource(paginationSchema),
-  async (req: UserRequest, res: Response) => {
+  async (req: Request, res: Response) => {
     const offsetNumber = parseInt(req.query.offset as string);
     const limitNumber = parseInt(req.query.limit as string);
 
@@ -60,9 +61,10 @@ router.get(
 router.post(
   "/",
   validateResource(baseExpensesListSchemaNoId),
-  async (req: UserRequest, res: Response) => {
-    const { name } = req.body;
-    const creator = req.user?.sub;
+  async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
+    const { name } = authReq.body;
+    const creator = authReq.userId;
 
     if (!name || !creator) {
       return res
@@ -70,7 +72,7 @@ router.post(
         .json({ message: "Name and creator are required." });
     }
 
-    const user = await UserModel.findOne({ auth0Id: creator });
+    const user = await UserModel.findById(creator);
 
     if (!user) {
       return res.status(status.NOT_FOUND).json({ message: "User not found." });
@@ -84,6 +86,20 @@ router.post(
     });
 
     const savedList = await newList.save();
+
+    const io = getIO();
+    io.emit("notification", {
+      type: "list",
+      props: {
+        id: savedList._id.toString(),
+        avatarSrc: user.photo,
+        listName: savedList.name,
+        creatorName: user.name,
+        timestamp: new Date().toISOString(),
+        action: "add",
+      },
+    });
+
     res.status(status.CREATED).json(savedList);
   }
 );
@@ -91,10 +107,11 @@ router.post(
 router.put(
   "/:id",
   validateResource(baseExpensesListSchemaNoId),
-  async (req: UserRequest, res: Response) => {
+  async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
     const { id } = req.params;
-    const { name } = req.body;
-    const creator = req.user?.sub;
+    const { name } = authReq.body;
+    const creator = authReq.userId;
 
     if (!name || !creator) {
       return res
@@ -102,7 +119,7 @@ router.put(
         .json({ message: "Name and creator are required." });
     }
 
-    const user = await UserModel.findOne({ auth0Id: creator });
+    const user = await UserModel.findById(creator);
 
     if (!user) {
       return res.status(status.NOT_FOUND).json({ message: "User not found." });
@@ -118,6 +135,19 @@ router.put(
       return res.status(status.NOT_FOUND).json({ message: "List not found" });
     }
 
+    const io = getIO();
+    io.emit("notification", {
+      type: "list",
+      props: {
+        id: updatedList._id.toString(),
+        avatarSrc: user.photo,
+        listName: updatedList.name,
+        creatorName: user.name,
+        timestamp: new Date().toISOString(),
+        action: "update",
+      },
+    });
+
     res.status(status.OK).json(updatedList);
   }
 );
@@ -125,12 +155,35 @@ router.put(
 router.delete(
   "/:id",
   validateResource(queryParamsValidator),
-  async (req: UserRequest, res: Response) => {
+  async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
     const { id } = req.params;
+
     const deletedList = await ExpensesListModel.findByIdAndDelete(id);
+
     if (!deletedList) {
       return res.status(status.NOT_FOUND).json({ message: "List not found" });
     }
+
+    const user = await UserModel.findById(authReq.userId);
+
+    if (!user) {
+      return res.status(status.NOT_FOUND).json({ message: "User not found." });
+    }
+
+    const io = getIO();
+    io.emit("notification", {
+      type: "list",
+      props: {
+        id: deletedList._id.toString(),
+        avatarSrc: user.photo,
+        listName: deletedList.name,
+        creatorName: user.name,
+        timestamp: new Date().toISOString(),
+        action: "remove",
+      },
+    });
+
     res.status(status.OK).json({ message: "List deleted successfully" });
   }
 );
