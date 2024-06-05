@@ -8,6 +8,9 @@ export interface Expense extends Document, Timestamp {
   date: Date;
   creator: mongoose.Types.ObjectId;
 }
+export interface ExpenseWithListId extends Omit<Expense, "_id"> {
+  listId?: string;
+}
 
 const expenseSchema = new Schema<Expense>(
   {

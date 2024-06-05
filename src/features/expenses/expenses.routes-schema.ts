@@ -1,13 +1,19 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const baseExpensesSchemaNoId = z.object({
   body: z.object({
-    name: z.string().min(2, "Name must be at least 2 characters long").max(50, "Name must be no longer than 50 characters"),
-    amount: z.number().positive("Amount must be greater than zero"),
+    name: z
+      .string()
+      .min(2, "Name must be at least 2 characters long")
+      .max(50, "Name must be no longer than 50 characters"),
+    price: z.number().positive("Price must be greater than zero"),
     cause: z.string().optional(),
-    date: z.string().refine((val) => !isNaN(Date.parse(val)), {
-      message: "Date must be a valid date string",
-    }),
+    date: z
+      .string()
+      .refine((val) => !isNaN(Date.parse(val)), {
+        message: "Date must be a valid date string",
+      })
+      .optional(),
   }),
 });
 
@@ -17,4 +23,5 @@ export const expenseIdSchema = z.object({
   }),
 });
 
-export const updateExpensesSchema = baseExpensesSchemaNoId.merge(expenseIdSchema);
+export const updateExpensesSchema =
+  baseExpensesSchemaNoId.merge(expenseIdSchema);

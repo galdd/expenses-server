@@ -88,6 +88,40 @@ router.post(
   }
 );
 
+router.put(
+  "/:id",
+  validateResource(baseExpensesListSchemaNoId),
+  async (req: UserRequest, res: Response) => {
+    const { id } = req.params;
+    const { name } = req.body;
+    const creator = req.user?.sub;
+
+    if (!name || !creator) {
+      return res
+        .status(status.BAD_REQUEST)
+        .json({ message: "Name and creator are required." });
+    }
+
+    const user = await UserModel.findOne({ auth0Id: creator });
+
+    if (!user) {
+      return res.status(status.NOT_FOUND).json({ message: "User not found." });
+    }
+
+    const updatedList = await ExpensesListModel.findByIdAndUpdate(
+      id,
+      { name, creator: user._id },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedList) {
+      return res.status(status.NOT_FOUND).json({ message: "List not found" });
+    }
+
+    res.status(status.OK).json(updatedList);
+  }
+);
+
 router.delete(
   "/:id",
   validateResource(queryParamsValidator),
