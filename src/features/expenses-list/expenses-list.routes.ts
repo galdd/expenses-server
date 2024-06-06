@@ -11,6 +11,7 @@ import {
 import { ExpensesListModel } from "./expenses-list.model";
 import { getIO } from "../../socket";
 import { AuthRequest } from "../../db/@types";
+import { NotificationModel } from "../notifications/notifications.model";
 
 export const router = Router();
 
@@ -88,6 +89,19 @@ router.post(
     const savedList = await newList.save();
 
     const io = getIO();
+
+    const notification = new NotificationModel({
+      userId: creator,
+      type: "list",
+      action: "add",
+      avatarSrc: user.photo,
+      listName: savedList.name,
+      timestamp: new Date().toISOString(),
+      creatorName: user.name,
+    });
+
+    await notification.save();
+
     io.emit("notification", {
       type: "list",
       props: {
@@ -136,6 +150,19 @@ router.put(
     }
 
     const io = getIO();
+
+    const notification = new NotificationModel({
+      userId: creator,
+      type: "list",
+      action: "update",
+      avatarSrc: user.photo,
+      listName: updatedList.name,
+      timestamp: new Date().toISOString(),
+      creatorName: user.name,
+    });
+
+    await notification.save();
+
     io.emit("notification", {
       type: "list",
       props: {
@@ -172,6 +199,19 @@ router.delete(
     }
 
     const io = getIO();
+
+    const notification = new NotificationModel({
+      userId: authReq.userId,
+      type: "list",
+      action: "remove",
+      avatarSrc: user.photo,
+      listName: deletedList.name,
+      timestamp: new Date().toISOString(),
+      creatorName: user.name,
+    });
+
+    await notification.save();
+
     io.emit("notification", {
       type: "list",
       props: {

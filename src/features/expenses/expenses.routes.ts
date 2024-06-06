@@ -11,6 +11,7 @@ import {
   updateExpensesSchema,
 } from "./expenses.routes-schema";
 import { getIO } from "../../socket";
+import { NotificationModel } from "../notifications/notifications.model";
 
 export const router = Router();
 
@@ -49,6 +50,21 @@ router.post(
       );
 
       const io = getIO();
+
+      const notification = new NotificationModel({
+        userId: creator,
+        type: "expense",
+        action: "add",
+        avatarSrc: newExpense.creator.photo,
+        expenseDescription: newExpense.name,
+        listName: listId,
+        price: newExpense.price,
+        timestamp: new Date().toISOString(),
+        creatorName: newExpense.creator.name,
+      });
+
+      await notification.save();
+
       io.emit("notification", {
         type: "expense",
         props: {
@@ -110,6 +126,21 @@ router.put(
     const list = await ExpensesListModel.findById(req.body.listId);
 
     const io = getIO();
+
+    const notification = new NotificationModel({
+      userId: authReq.userId,
+      type: "expense",
+      action: "update",
+      avatarSrc: updatedExpense.creator.photo,
+      expenseDescription: updatedExpense.name,
+      listName: req.body.listId,
+      price: updatedExpense.price,
+      timestamp: new Date().toISOString(),
+      creatorName: updatedExpense.creator.name,
+    });
+
+    await notification.save();
+
     io.emit("notification", {
       type: "expense",
       props: {
@@ -160,6 +191,21 @@ router.delete(
     }
 
     const io = getIO();
+
+    const notification = new NotificationModel({
+      userId: authReq.userId,
+      type: "expense",
+      action: "remove",
+      avatarSrc: deletedExpense.creator.photo,
+      expenseDescription: deletedExpense.name,
+      listName: listId as string,
+      price: deletedExpense.price,
+      timestamp: new Date().toISOString(),
+      creatorName: deletedExpense.creator.name,
+    });
+
+    await notification.save();
+
     io.emit("notification", {
       type: "expense",
       props: {

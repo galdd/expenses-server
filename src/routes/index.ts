@@ -12,6 +12,7 @@ import {
   extractUserInfo,
 } from "./middlewares";
 import users from "../features/users";
+import notifications from "../features/notifications";
 
 export const routes = (app: Express) => {
   app.get(...healthCheck);
@@ -21,6 +22,7 @@ export const routes = (app: Express) => {
   app.use(checkUserExists);
   app.use(...expenses);
   app.use(...expensesList);
+  app.use(...notifications);
   app.use(...stats);
 
   app.use(catchAllRequestsLastRouteHandler, errorHandler);

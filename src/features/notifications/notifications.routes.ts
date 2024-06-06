@@ -1,32 +1,40 @@
 import { Router, Request, Response } from "express";
 import status from "http-status";
+import { AuthRequest } from "../../db/@types";
 import { NotificationModel } from "./notifications.model";
-import { AuthRequest } from "../../db";
 
-export const router = Router();
+const router = Router();
 
 router.get("/", async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
-  const notifications = await NotificationModel.find({
-    userId: authReq.userId,
-  });
-  res.status(status.OK).json(notifications);
-});
+  const userId = authReq.userId;
 
-router.put("/:id/read", async (req: Request, res: Response) => {
-  const notification = await NotificationModel.findByIdAndUpdate(
-    req.params.id,
-    { read: true },
-    { new: true }
-  );
-
-  if (!notification) {
+  if (!userId) {
     return res
-      .status(status.NOT_FOUND)
-      .json({ message: "Notification not found" });
+      .status(status.UNAUTHORIZED)
+      .json({ message: "User not authenticated" });
   }
 
-  res.status(status.OK).json(notification);
+  const notifications = await NotificationModel.find({ userId })
+    .sort({ timestamp: -1 })
+    .populate("listName", "name") // Populate listName with the actual name from ExpensesList
+    .exec();
+
+  const formattedNotifications = notifications.map((notification) => ({
+    type: notification.type,
+    props: {
+      id: notification._id.toString(),
+      avatarSrc: notification.avatarSrc,
+      expenseDescription: notification.expenseDescription,
+      listName: notification.listName,
+      price: notification.price,
+      timestamp: notification.timestamp,
+      creatorName: notification.creatorName,
+      action: notification.action,
+    },
+  }));
+
+  res.status(status.OK).json(formattedNotifications);
 });
 
 export default ["/api/notifications", router] as [string, Router];
