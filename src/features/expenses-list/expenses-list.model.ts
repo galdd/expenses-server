@@ -20,6 +20,6 @@ const expensesListSchema = new Schema<ExpensesList>(
 );
 
 export const ExpensesListModel = mongoose.model<ExpensesList>(
-  "ExpensesLists",
+  "ExpensesList",
   expensesListSchema
 );

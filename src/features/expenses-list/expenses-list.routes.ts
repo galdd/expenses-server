@@ -95,7 +95,7 @@ router.post(
       type: "list",
       action: "add",
       avatarSrc: user.photo,
-      listName: savedList.name,
+      listName: savedList._id, // שינוי לשימוש ב-ObjectId
       timestamp: new Date().toISOString(),
       creatorName: user.name,
     });
@@ -156,7 +156,7 @@ router.put(
       type: "list",
       action: "update",
       avatarSrc: user.photo,
-      listName: updatedList.name,
+      listName: updatedList._id, // שינוי לשימוש ב-ObjectId
       timestamp: new Date().toISOString(),
       creatorName: user.name,
     });
@@ -205,7 +205,7 @@ router.delete(
       type: "list",
       action: "remove",
       avatarSrc: user.photo,
-      listName: deletedList.name,
+      listName: deletedList._id, // שינוי לשימוש ב-ObjectId
       timestamp: new Date().toISOString(),
       creatorName: user.name,
     });

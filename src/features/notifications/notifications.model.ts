@@ -6,7 +6,7 @@ export interface Notification extends Document {
   action: "add" | "update" | "remove";
   avatarSrc: string;
   expenseDescription?: string;
-  listName: mongoose.Types.ObjectId; // Changed to ObjectId to use ref
+  listName: mongoose.Types.ObjectId; // שינוי לשימוש ב-ObjectId
   price?: number;
   timestamp: string;
   creatorName: string;
@@ -22,11 +22,7 @@ const notificationSchema = new Schema<Notification>({
   action: { type: String, enum: ["add", "update", "remove"], required: true },
   avatarSrc: { type: String, required: true },
   expenseDescription: { type: String },
-  listName: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "ExpensesLists",
-  }, // Changed to use ref
+  listName: { type: Schema.Types.ObjectId, ref: "ExpensesList", required: true }, // שינוי לשימוש ב-ObjectId
   price: { type: Number },
   timestamp: { type: String, required: true },
   creatorName: { type: String, required: true },
