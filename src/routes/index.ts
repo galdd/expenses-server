@@ -4,6 +4,7 @@ import expenses from "../features/expenses";
 import expensesList from "../features/expenses-list";
 import { healthCheck } from "../features/health-check";
 import stats from "../features/stats";
+import dialogflow from "../features/dialogflow/dialogflow.route";
 import {
   errorHandler,
   catchAllRequestsLastRouteHandler,
@@ -20,6 +21,7 @@ export const routes = (app: Express) => {
   app.use(extractUserInfo);
   app.use(...users);
   app.use(checkUserExists);
+  app.use(...dialogflow); // Adding the Dialogflow route
   app.use(...expenses);
   app.use(...expensesList);
   app.use(...notifications);
