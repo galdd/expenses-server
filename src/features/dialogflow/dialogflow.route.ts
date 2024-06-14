@@ -140,7 +140,7 @@ const readLists = async (res: any) => {
 
 const createExpense = async (res: any, name: string, amount: number, listId: string) => {
   try {
-    const newExpense = new ExpenseModel({ name, amount, listId });
+    const newExpense = new ExpensesModel({ name, amount, listId });
     await newExpense.save();
     console.log(`Expense "${name}" created successfully.`);
     res.json({ response: `Expense "${name}" created successfully.` });
@@ -152,7 +152,7 @@ const createExpense = async (res: any, name: string, amount: number, listId: str
 
 const updateExpense = async (res: any, id: string, name: string, amount: number) => {
   try {
-    await ExpenseModel.findByIdAndUpdate(id, { name, amount });
+    await ExpensesModel.findByIdAndUpdate(id, { name, amount });
     console.log(`Expense updated to "${name}" successfully.`);
     res.json({ response: `Expense updated to "${name}" successfully.` });
   } catch (error) {
@@ -163,7 +163,7 @@ const updateExpense = async (res: any, id: string, name: string, amount: number)
 
 const deleteExpense = async (res: any, id: string) => {
   try {
-    await ExpenseModel.findByIdAndDelete(id);
+    await ExpensesModel.findByIdAndDelete(id);
     console.log(`Expense deleted successfully.`);
     res.json({ response: `Expense deleted successfully.` });
   } catch (error) {
@@ -174,7 +174,7 @@ const deleteExpense = async (res: any, id: string) => {
 
 const readExpenses = async (res: any, listId: string) => {
   try {
-    const expenses = await ExpenseModel.find({ listId });
+    const expenses = await ExpensesModel.find({ listId });
     console.log(`Fetched expenses: ${JSON.stringify(expenses, null, 2)}`);
     res.json({ response: expenses });
   } catch (error) {
