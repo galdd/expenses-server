@@ -97,8 +97,13 @@ const createList = async (res: any, name: string, userId: string) => {
   try {
     const newList = new ExpensesListModel({ name, creator: new mongoose.Types.ObjectId(userId) });
     await newList.save();
-    console.log(`List "${name}" created successfully.`);
-    res.json({ response: `List "${name}" created successfully.` });
+    res.json({ 
+      response: `List "${name}" created successfully.`,
+      intent: "create_list",
+      parameters: {
+        listName: name
+      }
+    });
   } catch (error) {
     console.error("Error creating list:", error);
     res.status(500).json({ response: `Failed to create list "${name}".`, error });
@@ -109,7 +114,14 @@ const updateList = async (res: any, id: string, name: string) => {
   try {
     await ExpensesListModel.findByIdAndUpdate(id, { name });
     console.log(`List updated to "${name}" successfully.`);
-    res.json({ response: `List updated to "${name}" successfully.` });
+    res.json({
+      response: `List updated to "${name}" successfully.`,
+      intent: "update_list",
+      parameters: {
+        listId: id,
+        listName: name
+      }
+    });
   } catch (error) {
     console.error("Error updating list:", error);
     res.status(500).json({ response: `Failed to update list "${name}".`, error });
@@ -120,7 +132,13 @@ const deleteList = async (res: any, id: string) => {
   try {
     await ExpensesListModel.findByIdAndDelete(id);
     console.log(`List deleted successfully.`);
-    res.json({ response: `List deleted successfully.` });
+    res.json({
+      response: `List deleted successfully.`,
+      intent: "delete_list",
+      parameters: {
+        listId: id
+      }
+    });
   } catch (error) {
     console.error("Error deleting list:", error);
     res.status(500).json({ response: `Failed to delete list.`, error });
@@ -131,7 +149,11 @@ const readLists = async (res: any) => {
   try {
     const lists = await ExpensesListModel.find();
     console.log(`Fetched lists: ${JSON.stringify(lists, null, 2)}`);
-    res.json({ response: lists });
+    res.json({
+      response: lists,
+      intent: "read_list",
+      parameters: {}
+    });
   } catch (error) {
     console.error("Error fetching lists:", error);
     res.status(500).json({ response: `Failed to fetch lists.`, error });
@@ -143,7 +165,15 @@ const createExpense = async (res: any, name: string, amount: number, listId: str
     const newExpense = new ExpensesModel({ name, amount, listId });
     await newExpense.save();
     console.log(`Expense "${name}" created successfully.`);
-    res.json({ response: `Expense "${name}" created successfully.` });
+    res.json({
+      response: `Expense "${name}" created successfully.`,
+      intent: "create_expense",
+      parameters: {
+        expenseName: name,
+        amount,
+        listId
+      }
+    });
   } catch (error) {
     console.error("Error creating expense:", error);
     res.status(500).json({ response: `Failed to create expense "${name}".`, error });
@@ -154,7 +184,15 @@ const updateExpense = async (res: any, id: string, name: string, amount: number)
   try {
     await ExpensesModel.findByIdAndUpdate(id, { name, amount });
     console.log(`Expense updated to "${name}" successfully.`);
-    res.json({ response: `Expense updated to "${name}" successfully.` });
+    res.json({
+      response: `Expense updated to "${name}" successfully.`,
+      intent: "update_expense",
+      parameters: {
+        expenseId: id,
+        expenseName: name,
+        amount
+      }
+    });
   } catch (error) {
     console.error("Error updating expense:", error);
     res.status(500).json({ response: `Failed to update expense "${name}".`, error });
@@ -165,7 +203,13 @@ const deleteExpense = async (res: any, id: string) => {
   try {
     await ExpensesModel.findByIdAndDelete(id);
     console.log(`Expense deleted successfully.`);
-    res.json({ response: `Expense deleted successfully.` });
+    res.json({
+      response: `Expense deleted successfully.`,
+      intent: "delete_expense",
+      parameters: {
+        expenseId: id
+      }
+    });
   } catch (error) {
     console.error("Error deleting expense:", error);
     res.status(500).json({ response: `Failed to delete expense.`, error });
@@ -176,7 +220,13 @@ const readExpenses = async (res: any, listId: string) => {
   try {
     const expenses = await ExpensesModel.find({ listId });
     console.log(`Fetched expenses: ${JSON.stringify(expenses, null, 2)}`);
-    res.json({ response: expenses });
+    res.json({
+      response: expenses,
+      intent: "read_expense",
+      parameters: {
+        listId
+      }
+    });
   } catch (error) {
     console.error("Error fetching expenses:", error);
     res.status(500).json({ response: `Failed to fetch expenses.`, error });
