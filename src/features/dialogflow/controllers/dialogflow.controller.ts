@@ -77,8 +77,8 @@ export const handleDialogFlowRequest = async (req: Request, res: Response) => {
           console.log("List name is required.");
           res.json({ response: "List name is required." });
         } else {
-          await deleteList(deleteListName);
-          res.json({ response: `List "${deleteListName}" deleted successfully.`,intent: "delete_list" });
+          const deletedList =  await deleteList(deleteListName);
+          res.json({ response: `List "${deleteListName}" deleted successfully.`,listId: deletedList._id,intent: "delete_list", });
         }
         break;
       case "read_list":
