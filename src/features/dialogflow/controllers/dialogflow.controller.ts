@@ -68,7 +68,7 @@ export const handleDialogFlowRequest = async (req: Request, res: Response) => {
           res.json({ response: "Old list name and new list name are required." });
         } else {
           const updatedList = await updateList(oldListName, newListName);
-          res.json({ response: `List "${oldListName}" updated to "${newListName}" successfully.`, list: updatedList });
+          res.json({ response: `List "${oldListName}" updated to "${newListName}" successfully.`, list: updatedList ,intent: "update_list",});
         }
         break;
       case "delete_list":
@@ -78,12 +78,12 @@ export const handleDialogFlowRequest = async (req: Request, res: Response) => {
           res.json({ response: "List name is required." });
         } else {
           await deleteList(deleteListName);
-          res.json({ response: `List "${deleteListName}" deleted successfully.` });
+          res.json({ response: `List "${deleteListName}" deleted successfully.`,intent: "delete_list" });
         }
         break;
       case "read_list":
         const lists = await readLists();
-        res.json({ response: lists });
+        res.json({ response: lists ,intent: "read_list"});
         break;
       case "create_expense":
         const expenseName = parameters.expenseName.stringValue;
