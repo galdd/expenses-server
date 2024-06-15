@@ -11,7 +11,7 @@ export interface ExpensesList extends Document, Timestamp {
 
 const expensesListSchema = new Schema<ExpensesList>(
   {
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     creator: { type: Schema.Types.ObjectId, ref: "User", required: true },
     expenses: [{ type: Schema.Types.ObjectId, ref: "Expenses" }],
     users_ids: [{ type: Schema.Types.ObjectId, ref: "User" }],
