@@ -9,6 +9,7 @@ import { createExpense } from "../services/expense/createExpense";
 import { updateExpense } from "../services/expense/updateExpense";
 import { deleteExpense } from "../services/expense/deleteExpense";
 import { readExpenses } from "../services/expense/readExpenses";
+import { ExpensesListModel } from "../../expenses-list/expenses-list.model";
 
 const projectId = process.env.GOOGLE_PROJECT_ID!;
 const sessionId = uuidv4();
@@ -18,7 +19,7 @@ const handleErrorResponse = (res: Response, errorMessage: string) => {
   let response = errorMessage.toString().replace(/"/g, "");
   console.log("Error response:", response);
   
-  res.status(400).json({response});
+  res.status(400).json({ response });
 };
 
 export const handleDialogFlowRequest = async (req: Request, res: Response) => {
@@ -36,7 +37,7 @@ export const handleDialogFlowRequest = async (req: Request, res: Response) => {
   };
 
   try {
-    // console.log("Sending request to Dialogflow:", JSON.stringify(request, null, 2));
+    console.log("Sending request to Dialogflow:", JSON.stringify(request, null, 2));
     const responses = await sessionClient.detectIntent(request);
     const result = responses[0].queryResult;
 
@@ -49,7 +50,7 @@ export const handleDialogFlowRequest = async (req: Request, res: Response) => {
     const intent = result.intent.displayName;
     const parameters = result.parameters.fields;
 
-    // console.log("Response from Dialogflow:", JSON.stringify(responses, null, 2));
+    console.log("Response from Dialogflow:", JSON.stringify(responses, null, 2));
 
     switch (intent) {
       case "create_list":
@@ -111,15 +112,26 @@ export const handleDialogFlowRequest = async (req: Request, res: Response) => {
         }
         break;
 
-      case "read_list":
-        try {
-          const lists = await readLists();
-          res.json({ response: lists, intent: "read_list" });
-        } catch (error) {
-          console.error("Error reading lists:", error.message);
-          handleErrorResponse(res, error.message);
-        }
-        break;
+        case "read_list":
+          const listNameToRead = parameters.listName.stringValue;
+          if (!listNameToRead) {
+            res.status(400).json({ response: "List name is required." });
+          } else {
+            try {
+              const list = await ExpensesListModel.findOne({ name: listNameToRead})
+                .populate('expenses')
+                .populate('creator', 'name');
+              if (!list) {
+                res.status(404).json({ response: `List with name "${listNameToRead}" not found.` });
+              } else {
+                res.json({ response: `Here is the list named "${listNameToRead}":`, list,intent: "read_list", });
+              }
+            } catch (error) {
+              console.error("Error reading list:", error.message);
+              handleErrorResponse(res, error.message);
+            }
+          }
+          break;
 
       case "create_expense":
         const expenseName = parameters.expenseName.stringValue;
